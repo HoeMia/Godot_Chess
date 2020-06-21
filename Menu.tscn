@@ -1,0 +1,53 @@
+[gd_scene format=2]
+
+[node name="Menu" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_left = 1.0
+rect_pivot_offset = Vector2( 448, 231 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="ItemList" type="ItemList" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_vertical = 0
+max_text_lines = 3
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="ExitButton" type="Button" parent="ItemList"]
+anchor_right = 1.0
+margin_top = 300.0
+margin_right = 6.10352e-05
+margin_bottom = 450.0
+text = "Exit"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="ResetButton" type="Button" parent="ItemList"]
+anchor_right = 1.0
+margin_right = 6.10352e-05
+margin_bottom = 150.0
+text = "Reset"
+
+[node name="IdleButton" type="Button" parent="ItemList"]
+anchor_right = 1.0
+margin_top = 150.0
+margin_right = 6.10352e-05
+margin_bottom = 300.0
+disabled = true
+text = "Idle"
+
+[node name="PlayerLabel" type="Label" parent="ItemList"]
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_top = -100.0
+margin_right = 6.10352e-05
+text = "Player: White"
+align = 1
+valign = 1
