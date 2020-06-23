@@ -7,24 +7,31 @@ var isWhite
 var pieceTexture
 var texturePath
 var drag_enabled
+var tile
+var pieceWidth
 
-func init( t_point, t_isWhite, t_pieceType ):
+func init( t_isWhite, t_pieceType, t_tile ):
 	loadScripts()
-	setVariables( t_point, t_isWhite )
+	setVariables( t_isWhite, t_tile )
 	setTexturePath( t_pieceType, t_isWhite )
 	loadTexture()
 	setTexture()
-	setPosition()
+	setTileRelatedPosition()
 
 
 func loadScripts():
 	PointScript = preload( "res://scripts/Point.gd" )
 	PieceConstantsPath = preload( "res://scripts/PieceConstants.gd" )
 
-func setVariables( t_point, t_isWhite ):
+func setVariables( t_isWhite, t_tile ):
 	isWhite = t_isWhite
-	point = t_point
+	tile = t_tile
 	drag_enabled = false
+	point = PointScript.new( 0, 0 )
+	pieceWidth = 64
+
+func setTile( newTile ):
+	tile = newTile
 
 func setTexturePath( t_pieceType, t_isWhite ):
 	match( t_pieceType ):
@@ -41,9 +48,14 @@ func setTexturePath( t_pieceType, t_isWhite ):
 		PieceConstantsPath.PieceType.King:
 			SetKingTexturePath( t_isWhite )
 
-func setPosition():
-	position.x = point.top_left_x
-	position.y = point.top_left_y
+func setTileRelatedPosition():
+	var t_point = tile.getPoint()
+	position.x = t_point.get_left_top_x() + pieceWidth/2
+	position.y = t_point.get_left_top_y() + pieceWidth/2
+
+func setMouseRelativePosition():
+	position.x = point.get_left_top_x()
+	position.y = point.get_left_top_y()
 
 func SetPawnTexturePath( t_isWhite ):
 	if( t_isWhite ):
@@ -87,31 +99,26 @@ func loadTexture():
 func setTexture():
 	$"Piece".set_texture( pieceTexture )
 
-func onDragStart():
-	pass
 
-func onDrop():
-	pass
-
-func isMoveValid():
-	pass
-
-func _input(event):
-	if event is InputEventMouseButton:
-		if event.button_index == BUTTON_LEFT and not event.pressed:
-			drag_enabled = false
-
-func _input_event(viewport, event, shape_idx):
-	if event is InputEventMouseButton:
-		if event.button_index == BUTTON_LEFT:
-			drag_enabled = event.pressed
-
-func _process(delta):
+func _process( _delta ):
 	if drag_enabled:
 		changePoint()
-		setPosition()
+		setMouseRelativePosition()
 
 func changePoint():
 	var mousepos = get_viewport().get_mouse_position()
-	point.top_left_x = mousepos.x
-	point.top_left_y = mousepos.y
+	var scaledMousepos = PieceConstantsPath.getMouseScaledPos( mousepos )
+	point.top_left_x = scaledMousepos.x
+	point.top_left_y = scaledMousepos.y
+
+func setPressed( isPressed ):
+	drag_enabled = isPressed
+
+func resetPositionToTile():
+	setTileRelatedPosition()
+
+func getPossibleMoves():
+	pass
+
+func canMoveToTile( newTile ):
+	return true

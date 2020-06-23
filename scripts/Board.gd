@@ -9,6 +9,11 @@ var PieceScene
 var PointScript
 var PieceConstantsPath
 var board
+var heldPiece
+var heldTile
+var rowNumbers
+var columnLetters
+var isWhiteMove
 
 func init():
 	loadScripts()
@@ -20,6 +25,9 @@ func initVariables():
 	tileWidth = 64
 	whiteRowHeight = 448
 	blackRowHeight = 0
+	rowNumbers = [ 1, 2, 3, 4, 5, 6, 7, 8 ]
+	columnLetters = [ 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H' ]
+	isWhiteMove = true
 
 func loadScripts():
 	TileScript = preload( "res://scripts/Tile.gd" )
@@ -34,10 +42,10 @@ func initBoard():
 	board = [
 		initFirstRow( PieceConstantsPath.PieceColor.Black ),
 		initSecondRow( PieceConstantsPath.PieceColor.Black ),
-		initBlankRow(),
-		initBlankRow(),
-		initBlankRow(),
-		initBlankRow(),
+		initBlankRow( 5 ),
+		initBlankRow( 4 ),
+		initBlankRow( 3 ),
+		initBlankRow( 2 ),
 		initSecondRow ( PieceConstantsPath.PieceColor.White ),
 		initFirstRow( PieceConstantsPath.PieceColor.White )
 	]
@@ -46,11 +54,19 @@ func initFirstRow( isWhite ):
 	var row = []
 	for i in range( 8 ):
 		var point = createFirstRowPoint( i, isWhite )
-		var piece = getPieceForGivenColumnFirstRow( i, point, isWhite )
-		row.push_back( piece )
+		var rowIndex = 0 if isWhite else 7
+		var tile = createTileForGivenPoint( point, rowIndex, i )
+		var piece = getPieceForGivenColumnFirstRow( i, tile, isWhite )
+		tile.setPiece( piece )
+		row.push_back( tile )
 	return row
 
-func getPieceForGivenColumnFirstRow( column, point, isWhite ):
+func createTileForGivenPoint( point, row, column ):
+	var tile = TileScript.new( point.get_left_top_x(), point.get_left_top_y(),
+	 rowNumbers[row], columnLetters[column], tileWidth, tileWidth )
+	return tile
+
+func getPieceForGivenColumnFirstRow( column, tile, isWhite ):
 	var piece = PieceScene.instance()
 	var pieceType
 	match( column ):
@@ -64,27 +80,41 @@ func getPieceForGivenColumnFirstRow( column, point, isWhite ):
 			pieceType = PieceConstantsPath.PieceType.Queen
 		4:
 			pieceType = PieceConstantsPath.PieceType.King
-	piece.init( point, isWhite, pieceType )
+	piece.init( isWhite, pieceType, tile )
 	return piece
 
 func initSecondRow( isWhite ):
 	var row = []
 	for i in range( 8 ):
 		var point = createSecondRowPoint( i, isWhite )
-		var pawn = createPawn( point, isWhite )
-		row.push_back( pawn )
+		var rowIndex = 1 if isWhite else 6
+		var tile = createTileForGivenPoint( point, rowIndex, i )
+		var pawn = createPawn( tile, isWhite )
+		tile.setPiece( pawn )
+		row.push_back( tile )
 	return row
 
-func initBlankRow():
-	return [null, null, null, null, null, null, null, null]
+func initBlankRow( rowNumber ):
+	var row = []
+	var point = createBlankRowFirstPoint( rowNumber )
+	for i in range(8):
+		var tile = createTileForGivenPoint( point, rowNumber, i )
+		point.top_left_x += tileWidth
+		row.push_back( tile )
+	return row
 
+func createBlankRowFirstPoint( i ):
+	var rowHeight = whiteRowHeight - tileWidth*i
+	var point = PointScript.new( 0, rowHeight )
+	return point
+	
 func createSecondRowPoint( i, isWhite ):
 	var rowHeight = 0
 	if( isWhite ):
 		rowHeight = whiteRowHeight - tileWidth
 	else:
 		rowHeight = blackRowHeight + tileWidth
-	var point = PointScript.new( i*tileWidth + tileWidth/2, rowHeight + tileWidth/2 )
+	var point = PointScript.new( i*tileWidth, rowHeight )
 	return point
 
 func createFirstRowPoint( i, isWhite ):
@@ -93,17 +123,73 @@ func createFirstRowPoint( i, isWhite ):
 		rowHeight = whiteRowHeight
 	else:
 		rowHeight = blackRowHeight
-	var point = PointScript.new( i*tileWidth + tileWidth/2, rowHeight + tileWidth/2 )
+	var point = PointScript.new( i*tileWidth, rowHeight )
 	return point
 
-func createPawn( point, isWhite ):
+func createPawn( tile, isWhite ):
 	var piece = PieceScene.instance()
 	var pieceType = PieceConstantsPath.PieceType.Pawn
-	piece.init( point, isWhite, pieceType )
+	piece.init( isWhite, pieceType, tile )
 	return piece
 
 func loadPieces():
 	for row in board:
-		for piece in row:
-			if( piece != null ):
-				add_child(piece)
+		for tile in row:
+			if( tile.hasPiece() ):
+				add_child( tile.getPiece() )
+
+func _input_event(_viewport, event, _shape_idx):
+	if event is InputEventMouseButton:
+		var t_point = getScaledPointFromMousePosEvent( event )
+		var t_tile = findClickedTile( t_point )
+		if event.button_index == BUTTON_LEFT and t_tile != null:
+			if event.pressed and t_tile.hasPiece() and canPlayerPickPiece( t_tile.getPiece() ):
+				startMovingPiece( t_tile, event )
+			elif heldPiece != null:
+				dropMovingPiece( t_tile )
+
+func getScaledPointFromMousePosEvent( event ):
+	var mousepos = event.position
+	var scaledMousepos = PieceConstantsPath.getMouseScaledPos( mousepos )
+	var t_point = PointScript.new( scaledMousepos.x, scaledMousepos.y )
+	return t_point
+
+func startMovingPiece( t_tile, event ):
+	heldTile = t_tile
+	heldPiece = t_tile.getPiece()
+	heldPiece.setPressed( event.pressed )
+
+func dropMovingPiece( newTile ):
+	heldPiece.setPressed( false )
+	if canHeldPieceMoveToTile( newTile ):
+		movePieceToNewTile( newTile )
+		changePlayer()
+	heldPiece.resetPositionToTile()
+	heldTile = null
+	heldPiece = null
+
+
+func findClickedTile( t_point ):
+	for row in board:
+		for tile in row:
+			if tile.isPointInsideTile( t_point ):
+				print("mouse inside tile ", tile.verticalLetter, tile.horizontalNumber)
+				return tile
+
+func movePieceToNewTile( newTile ):
+	heldTile.removePiece()
+	newTile.setPiece( heldPiece )
+	heldPiece.setTile( newTile )
+
+func canPlayerPickPiece( piece ):
+	if isWhiteMove and piece.isWhite:
+		return true
+	if not( isWhiteMove ) and not( piece.isWhite ):
+		return true
+	return false
+
+func canHeldPieceMoveToTile( newTile ):
+	return true
+
+func changePlayer():
+	isWhiteMove = not( isWhiteMove )
