@@ -5,10 +5,11 @@ var width
 var height
 var horizontalNumber
 var verticalLetter
+var PieceConstantsPath
 
 func _init( top_left_x, top_left_y, t_horizontalNumber, t_verticalLetter,
 			 t_width, t_height, t_piece = null ):
-	loadPointScript()
+	loadScripts()
 	setPiece( t_piece )
 	setPointCoords( top_left_x, top_left_y )
 	setTileSize( t_width, t_height )
@@ -41,8 +42,9 @@ func hasPiece():
 func getPiece():
 	return piece
 
-func loadPointScript():
+func loadScripts():
 	PointScript = preload( "res://scripts/Point.gd" )
+	PieceConstantsPath = preload( "res://scripts/PieceConstants.gd" )
 
 func setTileSize( t_width, t_height ):
 	width = t_width
@@ -66,3 +68,37 @@ func isPointInsideHorizontally( t_point ):
 	if( passed_x > self_x and passed_x < ( self_x + width ) ):
 		return true
 	return false
+
+func getCoordsInArray():
+	return [ verticalLetter, horizontalNumber ]
+
+func canTileBeShiftedBy( shift_x, shift_y ):
+	var letterColumnIndex = getArrayIndexFromLetterColumn()
+	var numberRowIndex = getArrayIndexFromNumberRow()
+	var newLetterIndex = letterColumnIndex + shift_x
+	var newNumberIndex = numberRowIndex + shift_y
+	if (newLetterIndex < 0 or newLetterIndex > 7 
+		or newNumberIndex < 0 or newNumberIndex > 7):
+			return false
+	return true
+
+func getCoordsInArrayShiftedBy( shift_x, shift_y ):
+	var letterColumnIndex = getArrayIndexFromLetterColumn()
+	var rowNumberIndex = getArrayIndexFromNumberRow()
+	letterColumnIndex += shift_x
+	rowNumberIndex += shift_y
+	var letter = getLetterFromIndex( letterColumnIndex )
+	var number = getNumberFromIndex( rowNumberIndex )
+	return [ letter, number ]
+
+func getArrayIndexFromLetterColumn():
+	return PieceConstantsPath.columnLetters.find( verticalLetter )
+
+func getArrayIndexFromNumberRow():
+	return PieceConstantsPath.rowNumbers.find( horizontalNumber )
+
+func getLetterFromIndex( letterIndex ):
+	return PieceConstantsPath.columnLetters[ letterIndex ]
+
+func getNumberFromIndex( numberIndex ):
+	return PieceConstantsPath.rowNumbers[ numberIndex ]

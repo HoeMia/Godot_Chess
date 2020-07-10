@@ -33,6 +33,9 @@ anchor_right = 1.0
 margin_right = 6.10352e-05
 margin_bottom = 150.0
 text = "Reset"
+__meta__ = {
+"_edit_use_anchors_": false
+}
 
 [node name="IdleButton" type="Button" parent="ItemList"]
 anchor_right = 1.0
@@ -51,3 +54,4 @@ margin_right = 6.10352e-05
 text = "Player: White"
 align = 1
 valign = 1
+autowrap = true

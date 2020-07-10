@@ -1,5 +1,7 @@
 extends Node2D
 
+signal playerChanged
+signal playerChecked
 #board size is 512 px, one tile is 64px wide (square)
 var tileWidth
 var whiteRowHeight
@@ -7,12 +9,11 @@ var blackRowHeight
 var TileScript 
 var PieceScene
 var PointScript
+var MoveCheckerScript
 var PieceConstantsPath
 var board
 var heldPiece
 var heldTile
-var rowNumbers
-var columnLetters
 var isWhiteMove
 
 func init():
@@ -25,8 +26,7 @@ func initVariables():
 	tileWidth = 64
 	whiteRowHeight = 448
 	blackRowHeight = 0
-	rowNumbers = [ 1, 2, 3, 4, 5, 6, 7, 8 ]
-	columnLetters = [ 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H' ]
+	
 	isWhiteMove = true
 
 func loadScripts():
@@ -34,6 +34,7 @@ func loadScripts():
 	PieceScene = preload( "res://Piece.tscn" )
 	PieceConstantsPath = preload( "res://scripts/PieceConstants.gd" )
 	PointScript = preload( "res://scripts/Point.gd" )
+	MoveCheckerScript = preload( "res://scripts/MoveChecker.gd" )
 
 func onPieceDrop():
 	pass
@@ -63,7 +64,8 @@ func initFirstRow( isWhite ):
 
 func createTileForGivenPoint( point, row, column ):
 	var tile = TileScript.new( point.get_left_top_x(), point.get_left_top_y(),
-	 rowNumbers[row], columnLetters[column], tileWidth, tileWidth )
+	 PieceConstantsPath.rowNumbers[row], 
+	PieceConstantsPath.columnLetters[column], tileWidth, tileWidth )
 	return tile
 
 func getPieceForGivenColumnFirstRow( column, tile, isWhite ):
@@ -161,13 +163,17 @@ func startMovingPiece( t_tile, event ):
 
 func dropMovingPiece( newTile ):
 	heldPiece.setPressed( false )
-	if canHeldPieceMoveToTile( newTile ):
+	if MoveCheckerScript.canHeldPieceMoveToTile( newTile, heldPiece, board, isWhiteMove ):
 		movePieceToNewTile( newTile )
 		changePlayer()
+		analyzeIfPlayerChecked()
 	heldPiece.resetPositionToTile()
 	heldTile = null
 	heldPiece = null
 
+func changePlayer():
+	isWhiteMove = not( isWhiteMove )
+	emitPlayerChanged()
 
 func findClickedTile( t_point ):
 	for row in board:
@@ -180,6 +186,7 @@ func movePieceToNewTile( newTile ):
 	heldTile.removePiece()
 	newTile.setPiece( heldPiece )
 	heldPiece.setTile( newTile )
+	heldPiece.SetMovedIfNotSetAlready()
 
 func canPlayerPickPiece( piece ):
 	if isWhiteMove and piece.isWhite:
@@ -188,8 +195,27 @@ func canPlayerPickPiece( piece ):
 		return true
 	return false
 
-func canHeldPieceMoveToTile( newTile ):
-	return true
+func analyzeIfPlayerChecked():
+	var playerKing = getCurrnetPlayerKing()
+	var attackingPieces = getPiecesAttacking( playerKing )
+	if attackingPieces.size() > 0:
+		emitPlayerChecked()
 
-func changePlayer():
-	isWhiteMove = not( isWhiteMove )
+func getCurrnetPlayerKing():
+	for row in board:
+		for tile in row:
+			if tile.hasPiece():
+				var piece = tile.getPiece()
+				var color = PieceConstantsPath.PieceColor.White if isWhiteMove else PieceConstantsPath.PieceColor.Black
+				if piece.isColor( color ) and piece.isKing():
+					return piece
+
+func getPiecesAttacking( piece ):
+	var attackers = []
+	return []
+
+func emitPlayerChecked():
+	emit_signal( "playerChecked" )
+
+func emitPlayerChanged():
+	emit_signal( "playerChanged", isWhiteMove )
