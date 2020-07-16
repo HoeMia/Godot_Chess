@@ -8,9 +8,44 @@
 
 config_version=4
 
-_global_script_classes=[  ]
+_global_script_classes=[ {
+"base": "Node2D",
+"class": "Game",
+"language": "GDScript",
+"path": "res://scripts/Game.gd"
+}, {
+"base": "Reference",
+"class": "MoveChecker",
+"language": "GDScript",
+"path": "res://scripts/MoveChecker.gd"
+}, {
+"base": "KinematicBody2D",
+"class": "Piece",
+"language": "GDScript",
+"path": "res://scripts/Piece.gd"
+}, {
+"base": "Reference",
+"class": "PieceConstants",
+"language": "GDScript",
+"path": "res://scripts/PieceConstants.gd"
+}, {
+"base": "Reference",
+"class": "Point",
+"language": "GDScript",
+"path": "res://scripts/Point.gd"
+}, {
+"base": "Reference",
+"class": "Tile",
+"language": "GDScript",
+"path": "res://scripts/Tile.gd"
+} ]
 _global_script_class_icons={
-
+"Game": "",
+"MoveChecker": "",
+"Piece": "",
+"PieceConstants": "",
+"Point": "",
+"Tile": ""
 }
 
 [application]

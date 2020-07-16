@@ -26,29 +26,28 @@ func initVariables():
 	tileWidth = 64
 	whiteRowHeight = 448
 	blackRowHeight = 0
-	
 	isWhiteMove = true
 
 func loadScripts():
-	TileScript = preload( "res://scripts/Tile.gd" )
+	#PointScript = preload( "res://scripts/Point.gd" )
+	#PieceConstantsPath = preload( "res://scripts/PieceConstants.gd" )
+	#MoveCheckerScript = preload( "res://scripts/MoveChecker.gd" )
+	#TileScript = preload( "res://scripts/Tile.gd" )
 	PieceScene = preload( "res://Piece.tscn" )
-	PieceConstantsPath = preload( "res://scripts/PieceConstants.gd" )
-	PointScript = preload( "res://scripts/Point.gd" )
-	MoveCheckerScript = preload( "res://scripts/MoveChecker.gd" )
 
 func onPieceDrop():
 	pass
 
 func initBoard():
 	board = [
-		initFirstRow( PieceConstantsPath.PieceColor.Black ),
-		initSecondRow( PieceConstantsPath.PieceColor.Black ),
+		initFirstRow( PieceConstants.PieceColor.Black ),
+		initSecondRow( PieceConstants.PieceColor.Black ),
 		initBlankRow( 5 ),
 		initBlankRow( 4 ),
 		initBlankRow( 3 ),
 		initBlankRow( 2 ),
-		initSecondRow ( PieceConstantsPath.PieceColor.White ),
-		initFirstRow( PieceConstantsPath.PieceColor.White )
+		initSecondRow ( PieceConstants.PieceColor.White ),
+		initFirstRow( PieceConstants.PieceColor.White )
 	]
 
 func initFirstRow( isWhite ):
@@ -63,9 +62,9 @@ func initFirstRow( isWhite ):
 	return row
 
 func createTileForGivenPoint( point, row, column ):
-	var tile = TileScript.new( point.get_left_top_x(), point.get_left_top_y(),
-	 PieceConstantsPath.rowNumbers[row], 
-	PieceConstantsPath.columnLetters[column], tileWidth, tileWidth )
+	var tile = Tile.new( point.get_left_top_x(), point.get_left_top_y(),
+	 PieceConstants.rowNumbers[row], 
+	PieceConstants.columnLetters[column], tileWidth, tileWidth )
 	return tile
 
 func getPieceForGivenColumnFirstRow( column, tile, isWhite ):
@@ -73,15 +72,15 @@ func getPieceForGivenColumnFirstRow( column, tile, isWhite ):
 	var pieceType
 	match( column ):
 		0, 7:
-			pieceType = PieceConstantsPath.PieceType.Rook
+			pieceType = PieceConstants.PieceType.Rook
 		1, 6:
-			pieceType = PieceConstantsPath.PieceType.Knight
+			pieceType = PieceConstants.PieceType.Knight
 		2, 5:
-			pieceType = PieceConstantsPath.PieceType.Bishop
+			pieceType = PieceConstants.PieceType.Bishop
 		3:
-			pieceType = PieceConstantsPath.PieceType.Queen
+			pieceType = PieceConstants.PieceType.Queen
 		4:
-			pieceType = PieceConstantsPath.PieceType.King
+			pieceType = PieceConstants.PieceType.King
 	piece.init( isWhite, pieceType, tile )
 	return piece
 
@@ -107,7 +106,7 @@ func initBlankRow( rowNumber ):
 
 func createBlankRowFirstPoint( i ):
 	var rowHeight = whiteRowHeight - tileWidth*i
-	var point = PointScript.new( 0, rowHeight )
+	var point = Point.new( 0, rowHeight )
 	return point
 	
 func createSecondRowPoint( i, isWhite ):
@@ -116,7 +115,7 @@ func createSecondRowPoint( i, isWhite ):
 		rowHeight = whiteRowHeight - tileWidth
 	else:
 		rowHeight = blackRowHeight + tileWidth
-	var point = PointScript.new( i*tileWidth, rowHeight )
+	var point = Point.new( i*tileWidth, rowHeight )
 	return point
 
 func createFirstRowPoint( i, isWhite ):
@@ -125,12 +124,12 @@ func createFirstRowPoint( i, isWhite ):
 		rowHeight = whiteRowHeight
 	else:
 		rowHeight = blackRowHeight
-	var point = PointScript.new( i*tileWidth, rowHeight )
+	var point = Point.new( i*tileWidth, rowHeight )
 	return point
 
 func createPawn( tile, isWhite ):
 	var piece = PieceScene.instance()
-	var pieceType = PieceConstantsPath.PieceType.Pawn
+	var pieceType = PieceConstants.PieceType.Pawn
 	piece.init( isWhite, pieceType, tile )
 	return piece
 
@@ -152,8 +151,8 @@ func _input_event(_viewport, event, _shape_idx):
 
 func getScaledPointFromMousePosEvent( event ):
 	var mousepos = event.position
-	var scaledMousepos = PieceConstantsPath.getMouseScaledPos( mousepos )
-	var t_point = PointScript.new( scaledMousepos.x, scaledMousepos.y )
+	var scaledMousepos = PieceConstants.getMouseScaledPos( mousepos )
+	var t_point = Point.new( scaledMousepos.x, scaledMousepos.y )
 	return t_point
 
 func startMovingPiece( t_tile, event ):
@@ -163,7 +162,7 @@ func startMovingPiece( t_tile, event ):
 
 func dropMovingPiece( newTile ):
 	heldPiece.setPressed( false )
-	if MoveCheckerScript.canHeldPieceMoveToTile( newTile, heldPiece, board, isWhiteMove ):
+	if MoveChecker.canHeldPieceMoveToTile( newTile, heldPiece, board ):
 		movePieceToNewTile( newTile )
 		changePlayer()
 		analyzeIfPlayerChecked()
@@ -206,7 +205,7 @@ func getCurrnetPlayerKing():
 		for tile in row:
 			if tile.hasPiece():
 				var piece = tile.getPiece()
-				var color = PieceConstantsPath.PieceColor.White if isWhiteMove else PieceConstantsPath.PieceColor.Black
+				var color = PieceConstants.PieceColor.White if isWhiteMove else PieceConstants.PieceColor.Black
 				if piece.isColor( color ) and piece.isKing():
 					return piece
 

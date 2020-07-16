@@ -1,3 +1,5 @@
+class_name Tile
+
 var PointScript
 var point
 var piece
@@ -20,7 +22,7 @@ func setTileSigns( t_horizontalNumber, t_verticalLetter ):
 	verticalLetter = t_verticalLetter
 
 func setPointCoords( top_left_x, top_left_y ):
-	setPoint(PointScript.new( top_left_x, top_left_y ))
+	setPoint(Point.new( top_left_x, top_left_y ))
 
 func setPoint( t_point ):
 	point = t_point
@@ -43,8 +45,9 @@ func getPiece():
 	return piece
 
 func loadScripts():
-	PointScript = preload( "res://scripts/Point.gd" )
-	PieceConstantsPath = preload( "res://scripts/PieceConstants.gd" )
+	pass
+	#PieceConstantsPath = preload( "res://scripts/PieceConstants.gd" )
+	#PointScript = preload( "res://scripts/Point.gd" )
 
 func setTileSize( t_width, t_height ):
 	width = t_width
@@ -91,14 +94,18 @@ func getCoordsInArrayShiftedBy( shift_x, shift_y ):
 	var number = getNumberFromIndex( rowNumberIndex )
 	return [ letter, number ]
 
-func getArrayIndexFromLetterColumn():
-	return PieceConstantsPath.columnLetters.find( verticalLetter )
+func getArrayIndexFromLetterColumn( vLetter = "" ):
+	if vLetter == "":
+		vLetter = verticalLetter
+	return PieceConstants.columnLetters.find( vLetter )
 
-func getArrayIndexFromNumberRow():
-	return PieceConstantsPath.rowNumbers.find( horizontalNumber )
+func getArrayIndexFromNumberRow( hNumber = -1 ):
+	if hNumber == -1:
+		hNumber = horizontalNumber
+	return PieceConstants.rowNumbers.find( hNumber )
 
 func getLetterFromIndex( letterIndex ):
-	return PieceConstantsPath.columnLetters[ letterIndex ]
+	return PieceConstants.columnLetters[ letterIndex ]
 
 func getNumberFromIndex( numberIndex ):
-	return PieceConstantsPath.rowNumbers[ numberIndex ]
+	return PieceConstants.rowNumbers[ numberIndex ]

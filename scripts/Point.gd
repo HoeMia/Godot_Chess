@@ -1,3 +1,5 @@
+class_name Point
+
 var top_left_x
 var top_left_y
 

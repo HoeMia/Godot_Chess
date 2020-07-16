@@ -1,6 +1,9 @@
 extends KinematicBody2D
 
+class_name Piece
+
 var PointScript
+var TileScript
 var PieceConstantsPath
 var point
 var isWhite
@@ -30,7 +33,7 @@ func setVariables( t_isWhite, t_tile, t_pieceType ):
 	tile = t_tile
 	pieceType = t_pieceType
 	drag_enabled = false
-	point = PointScript.new( 0, 0 )
+	point = Point.new( 0, 0 )
 	pieceWidth = 64
 	hasPieceMoved = false
 
@@ -121,186 +124,252 @@ func setPressed( isPressed ):
 func resetPositionToTile():
 	setTileRelatedPosition()
 
-func getAllPossibleMoves():
+func getAllPossibleMovesOnBoard( board ):
 	match( pieceType ):
 		PieceConstantsPath.PieceType.Pawn:
-			return getPawnAllPossibleMoves()
+			return getPawnAllPossibleMovesOnBoard( board )
 		PieceConstantsPath.PieceType.Rook:
-			return getRookAllPossibleMoves()
+			return getRookAllPossibleMovesOnBoard( board )
 		PieceConstantsPath.PieceType.Knight:
-			return getKnightAllPossibleMoves()
+			return getKnightAllPossibleMovesOnBoard( board )
 		PieceConstantsPath.PieceType.Bishop:
-			return getBishopAllPossibleMoves()
+			return getBishopAllPossibleMovesOnBoard( board )
 		PieceConstantsPath.PieceType.Queen:
-			return getQueenAllPossibleMoves()
+			return getQueenAllPossibleMovesOnBoard( board )
 		PieceConstantsPath.PieceType.King:
-			return getKingAllPossibleMoves()
+			return getKingAllPossibleMovesOnBoard( board )
 
-func getPawnAllPossibleMoves():
-	var forwardMoves = getPawnForwardMoves()
-	var diagonalMoves = getPawnDiagonalMoves()
+func getPawnAllPossibleMovesOnBoard( board ):
+	var forwardMoves = getPawnForwardMovesOnBoard( board )
+	var diagonalMoves = getPawnDiagonalMovesOnBoard( board )
 	var allMoves = forwardMoves + diagonalMoves
 	return allMoves
 
-func getRookAllPossibleMoves():
-	var horizontalMoves = getRookHorizontalMoves()
-	var verticalMoves = getRookVerticalMoves()
+func getRookAllPossibleMovesOnBoard( board ):
+	var horizontalMoves = getRookHorizontalMovesOnBoard( board )
+	var verticalMoves = getRookVerticalMovesOnBoard( board )
 	var allMoves = horizontalMoves + verticalMoves
 	return allMoves
 
-func getKnightAllPossibleMoves():
-	var longHorizontalMoves = getKnightLongHorizontalMoves()
-	var longVerticalMoves = getKnightLongVerticalMoves()
+func getKnightAllPossibleMovesOnBoard( board ):
+	var longHorizontalMoves = getKnightLongHorizontalMovesOnBoard( board )
+	var longVerticalMoves = getKnightLongVerticalMovesOnBoard( board )
 	var allMoves = longHorizontalMoves + longVerticalMoves
 	return allMoves
 
-func getBishopAllPossibleMoves():
-	var leftDiagonals = getBishopLeftDiagonals()
-	var rightDiagonals = getBishopRightDiagonals()
+func getBishopAllPossibleMovesOnBoard( board ):
+	var leftDiagonals = getBishopLeftDiagonalsOnBoard( board )
+	var rightDiagonals = getBishopRightDiagonalsOnBoard( board )
 	var allMoves = leftDiagonals + rightDiagonals
 	return allMoves
 
-func getQueenAllPossibleMoves():
-	var diagonalMoves = getBishopAllPossibleMoves()
-	var straightMoves = getRookAllPossibleMoves()
+func getQueenAllPossibleMovesOnBoard( board ):
+	var diagonalMoves = getBishopAllPossibleMovesOnBoard( board )
+	var straightMoves = getRookAllPossibleMovesOnBoard( board )
 	var allMoves = diagonalMoves + straightMoves
 	return allMoves
 
-func getKingAllPossibleMoves():
-	var straightMoves = getKingStraightMoves()
-	var diagonalMoves = getKingDiagonalMoves()
-	var rochadeMoves = getKingRochadeMoves()
-	var allMoves = straightMoves + diagonalMoves
+func getKingAllPossibleMovesOnBoard( board ):
+	var straightMoves = getKingStraightMovesOnBoard( board )
+	var diagonalMoves = getKingDiagonalMovesOnBoard( board )
+	var rochadeMoves = getKingRochadeMovesOnBoard( board )
+	var allMoves = straightMoves + diagonalMoves + rochadeMoves
 	return allMoves
 
-func getPawnForwardMoves():
+func getPawnForwardMovesOnBoard( board ):
 	var allMoves = []
-	if isWhite and tile.canTileBeShiftedBy( 0, 1 ):
-		allMoves.push_back( tile.getCoordsInArrayShiftedBy(0, 1) )
+	var newTileCoords
+	if isWhite:
+		if tile.canTileBeShiftedBy( 0, 1 ):
+			newTileCoords = tile.getCoordsInArrayShiftedBy(0, 1)
+			if isTileOnBoardFree( newTileCoords, board ):
+				allMoves.push_back( newTileCoords )
 		if (not hasPieceMoved()) and tile.canTileBeShiftedBy( 0, 2 ):
-			allMoves.push_back( tile.getCoordsInArrayShiftedBy(0, 2) )
-	elif tile.canTileBeShiftedBy( 0, -1 ):
-		allMoves.push_back( tile.getCoordsInArrayShiftedBy(0, -1) )
+			newTileCoords = tile.getCoordsInArrayShiftedBy(0, 2)
+			if isTileOnBoardFree( newTileCoords, board ):
+				allMoves.push_back( newTileCoords )
+	else:
+		if tile.canTileBeShiftedBy( 0, -1 ):
+			newTileCoords = tile.getCoordsInArrayShiftedBy(0, -1)
+			if isTileOnBoardFree( newTileCoords, board ):
+				allMoves.push_back( newTileCoords )
 		if (not hasPieceMoved()) and tile.canTileBeShiftedBy( 0, -2 ):
-			allMoves.push_back( tile.getCoordsInArrayShiftedBy(0, -2) )
+			newTileCoords = tile.getCoordsInArrayShiftedBy(0, -2)
+			if isTileOnBoardFree( newTileCoords, board ):
+				allMoves.push_back( newTileCoords )
 	return allMoves
 
-func getPawnDiagonalMoves():
+func getPawnDiagonalMovesOnBoard( board ):
 	var allMoves = []
+	var tileCoords
 	if isWhite:
 		if tile.canTileBeShiftedBy( 1, 1 ):
-			allMoves.push_back( tile.getCoordsInArrayShiftedBy(1, 1) )
+			tileCoords = tile.getCoordsInArrayShiftedBy(1, 1)
+			if isEnemyOnTile( tileCoords, board ):
+				allMoves.push_back( tileCoords )
 		if tile.canTileBeShiftedBy( -1, 1 ):
-			allMoves.push_back( tile.getCoordsInArrayShiftedBy(-1, 1) )
+			tileCoords = tile.getCoordsInArrayShiftedBy(-1, 1)
+			if isEnemyOnTile( tileCoords, board ):
+				allMoves.push_back( tileCoords )
 	else:
 		if tile.canTileBeShiftedBy( 1, -1 ):
-			allMoves.push_back( tile.getCoordsInArrayShiftedBy(1, -1) )
+			tileCoords = tile.getCoordsInArrayShiftedBy(1, -1)
+			if isEnemyOnTile( tileCoords, board ):
+				allMoves.push_back( tileCoords )
 		if tile.canTileBeShiftedBy( -1, -1 ):
-			allMoves.push_back( tile.getCoordsInArrayShiftedBy(-1, -1) )
+			tileCoords = tile.getCoordsInArrayShiftedBy(-1, -1)
+			if isEnemyOnTile( tileCoords, board ):
+				allMoves.push_back( tileCoords )
 	return allMoves
 
-func getRookHorizontalMoves():
+func getRookHorizontalMovesOnBoard( board ):
 	var allMoves = []
 	var shift = -1
+	var tileCoords
 	while tile.canTileBeShiftedBy( shift, 0 ):
-		allMoves.push_back( tile.getCoordsInArrayShiftedBy( shift, 0 ) )
+		tileCoords = tile.getCoordsInArrayShiftedBy( shift, 0 )
+		if (isTileOnBoardFree( tileCoords, board )
+		 or isEnemyOnTile( tileCoords, board )
+		 or (isOwnKingOnTile( tileCoords, board ) and isRook())):
+			allMoves.push_back( tileCoords )
+			if isEnemyOnTile( tileCoords, board ) or isOwnKingOnTile( tileCoords, board ):
+				break
+		else:
+			break
 		shift -= 1
 	shift = 1
 	while tile.canTileBeShiftedBy( shift, 0 ):
-		allMoves.push_back( tile.getCoordsInArrayShiftedBy( shift, 0 ) )
+		tileCoords = tile.getCoordsInArrayShiftedBy( shift, 0 )
+		if (isTileOnBoardFree( tileCoords, board )
+		 or isEnemyOnTile( tileCoords, board )
+		 or (isOwnKingOnTile( tileCoords, board ) and isRook())):
+			allMoves.push_back( tileCoords )
+			if isEnemyOnTile( tileCoords, board ) or isOwnKingOnTile( tileCoords, board ):
+				break
+		else:
+			break
 		shift += 1
 	return allMoves
 
-func getRookVerticalMoves():
+func getRookVerticalMovesOnBoard( board ):
 	var allMoves = []
 	var shift = -1
+	var tileCoords
 	while tile.canTileBeShiftedBy( 0, shift ):
-		allMoves.push_back( tile.getCoordsInArrayShiftedBy( 0, shift ) )
+		tileCoords = tile.getCoordsInArrayShiftedBy( 0, shift )
+		if isTileOnBoardFree( tileCoords, board ) or isEnemyOnTile( tileCoords, board ):
+			allMoves.push_back( tileCoords )
+			if isEnemyOnTile( tileCoords, board ):
+				break
+		else:
+			break
 		shift -= 1
 	shift = 1
 	while tile.canTileBeShiftedBy( 0, shift ):
-		allMoves.push_back( tile.getCoordsInArrayShiftedBy( 0, shift ) )
+		tileCoords = tile.getCoordsInArrayShiftedBy( 0, shift )
+		if isTileOnBoardFree( tileCoords, board ) or isEnemyOnTile( tileCoords, board ):
+			allMoves.push_back( tileCoords )
+			if isEnemyOnTile( tileCoords, board ):
+				break
+		else:
+			break
 		shift += 1
 	return allMoves
 
-func getKnightLongHorizontalMoves():
+func getKnightLongHorizontalMovesOnBoard( board ):
 	var allMoves = []
-	if tile.canTileBeShiftedBy( 2, 1 ):
-		allMoves.push_back( tile.getCoordsInArrayShiftedBy( 2, 1 ) )
-	if tile.canTileBeShiftedBy( 2, -1 ):
-		allMoves.push_back( tile.getCoordsInArrayShiftedBy( 2, -1 ) )
-	if tile.canTileBeShiftedBy( -2, 1 ):
-		allMoves.push_back( tile.getCoordsInArrayShiftedBy( -2, 1 ) )
-	if tile.canTileBeShiftedBy( -2, -1 ):
-		allMoves.push_back( tile.getCoordsInArrayShiftedBy( -2, -1 ) )
+	var tileCoords
+	var coordsShifts = [ [2, 1], [2, -1], [-2, 1], [-2, -1] ]
+	for shifts in coordsShifts:
+		if tile.canTileBeShiftedBy(shifts[0], shifts[1] ):
+			tileCoords = tile.getCoordsInArrayShiftedBy( shifts[0], shifts[1] )
+			if isTileOnBoardFree( tileCoords, board ) or isEnemyOnTile( tileCoords, board ):
+				allMoves.push_back( tileCoords )
 	return allMoves
 
-func getKnightLongVerticalMoves():
+func getKnightLongVerticalMovesOnBoard( board ):
 	var allMoves = []
-	if tile.canTileBeShiftedBy( 1, 2 ):
-		allMoves.push_back( tile.getCoordsInArrayShiftedBy( 1, 2 ) )
-	if tile.canTileBeShiftedBy( 1, -2 ):
-		allMoves.push_back( tile.getCoordsInArrayShiftedBy( 1, -2 ) )
-	if tile.canTileBeShiftedBy( -1, 2 ):
-		allMoves.push_back( tile.getCoordsInArrayShiftedBy( -1, 2 ) )
-	if tile.canTileBeShiftedBy( -1, -2 ):
-		allMoves.push_back( tile.getCoordsInArrayShiftedBy( -1, -2 ) )
+	var tileCoords
+	var coordsShifts = [ [1, 2], [1, -2], [-1, 2], [-1, -2] ]
+	for shifts in coordsShifts:
+		if tile.canTileBeShiftedBy(shifts[0], shifts[1] ):
+			tileCoords = tile.getCoordsInArrayShiftedBy( shifts[0], shifts[1] )
+			if isTileOnBoardFree( tileCoords, board ) or isEnemyOnTile( tileCoords, board ):
+				allMoves.push_back( tileCoords )
 	return allMoves
 
-func getBishopLeftDiagonals():
+func getBishopLeftDiagonalsOnBoard( board ):
 	var allMoves = []
 	var iterator = -1
+	var tileCoords
 	while tile.canTileBeShiftedBy( iterator, iterator ):
-		allMoves.push_back( tile.getCoordsInArrayShiftedBy( iterator, iterator ) )
-		iterator -= 1
+		tileCoords = tile.getCoordsInArrayShiftedBy( iterator, iterator )
+		if isTileOnBoardFree( tileCoords, board ) or isEnemyOnTile( tileCoords, board ):
+			allMoves.push_back( tileCoords )
+			iterator -= 1
+		else:
+			break
 	iterator = -1
 	while tile.canTileBeShiftedBy( iterator, -iterator ):
-		allMoves.push_back( tile.getCoordsInArrayShiftedBy( iterator, -iterator ) )
-		iterator -= 1
+		tileCoords = tile.getCoordsInArrayShiftedBy( iterator, -iterator )
+		if isTileOnBoardFree( tileCoords, board ) or isEnemyOnTile( tileCoords, board ):
+			allMoves.push_back( tileCoords )
+			iterator -= 1
+		else:
+			break
 	return allMoves
 
-func getBishopRightDiagonals():
+func getBishopRightDiagonalsOnBoard( board ):
 	var allMoves = []
 	var iterator = 1
+	var tileCoords
 	while tile.canTileBeShiftedBy( iterator, iterator ):
-		allMoves.push_back( tile.getCoordsInArrayShiftedBy( iterator, iterator ) )
-		iterator += 1
+		tileCoords = tile.getCoordsInArrayShiftedBy( iterator, iterator )
+		if isTileOnBoardFree( tileCoords, board ) or isEnemyOnTile( tileCoords, board ):
+			allMoves.push_back( tileCoords )
+			iterator += 1
+		else:
+			break
 	iterator = 1
 	while tile.canTileBeShiftedBy( iterator, -iterator ):
-		allMoves.push_back( tile.getCoordsInArrayShiftedBy( iterator, -iterator ) )
-		iterator += 1
+		tileCoords = tile.getCoordsInArrayShiftedBy( iterator, -iterator )
+		if isTileOnBoardFree( tileCoords, board ) or isEnemyOnTile( tileCoords, board ):
+			allMoves.push_back( tileCoords )
+			iterator += 1
+		else:
+			break
 	return allMoves
 
-func getKingStraightMoves():
+func getKingStraightMovesOnBoard( board ):
 	var allMoves = []
-	if tile.canTileBeShiftedBy( 1, 0 ):
-		allMoves.push_back( tile.getCoordsInArrayShiftedBy( 1, 0 ) )
-	if tile.canTileBeShiftedBy( -1, 0 ):
-		allMoves.push_back( tile.getCoordsInArrayShiftedBy( -1, 0 ) )
-	if tile.canTileBeShiftedBy( 0, 1 ):
-		allMoves.push_back( tile.getCoordsInArrayShiftedBy( 0, 1 ) )
-	if tile.canTileBeShiftedBy( 0, -1 ):
-		allMoves.push_back( tile.getCoordsInArrayShiftedBy( 0, -1 ) )
+	var tileCoords
+	var straightMovesIndexes = [ [1, 0], [-1, 0], [0, 1], [0, -1] ]
+	for straightMove in straightMovesIndexes:
+		if tile.canTileBeShiftedBy( straightMove[0], straightMove[1] ):
+			tileCoords = tile.getCoordsInArrayShiftedBy( straightMove[0], straightMove[1] )
+			if isTileOnBoardFree( tileCoords, board ) or isEnemyOnTile( tileCoords, board ):
+				allMoves.push_back( tileCoords )
 	return allMoves
 
-func getKingDiagonalMoves():
+func getKingDiagonalMovesOnBoard( board ):
 	var allMoves = []
-	if tile.canTileBeShiftedBy( 1, 1 ):
-		allMoves.push_back( tile.getCoordsInArrayShiftedBy( 1, 1 ) )
-	if tile.canTileBeShiftedBy( -1, 1 ):
-		allMoves.push_back( tile.getCoordsInArrayShiftedBy( -1, 1 ) )
-	if tile.canTileBeShiftedBy( 1, -1 ):
-		allMoves.push_back( tile.getCoordsInArrayShiftedBy( 1, -1 ) )
-	if tile.canTileBeShiftedBy( -1, -1 ):
-		allMoves.push_back( tile.getCoordsInArrayShiftedBy( -1, -1 ) )
+	var tileCoords
+	var straightMovesIndexes = [ [1, 1], [-1, 1], [1, -1], [-1, -1] ]
+	for straightMove in straightMovesIndexes:
+		if tile.canTileBeShiftedBy( straightMove[0], straightMove[1] ):
+			tileCoords = tile.getCoordsInArrayShiftedBy( straightMove[0], straightMove[1] )
+			if isTileOnBoardFree( tileCoords, board ) or isEnemyOnTile( tileCoords, board ):
+				allMoves.push_back( tileCoords )
 	return allMoves
 
-func getKingRochadeMoves():
+func getKingRochadeMovesOnBoard( board ):
 	var possibleMoves = []
 	if not hasPieceMoved:
 		var yPoint = 0 if isWhite else 7
-		possibleMoves.push_back( [tile.getLetterFromIndex(0), tile.getNumberFromIndex(yPoint)] )
-		possibleMoves.push_back( [tile.getLetterFromIndex(7), tile.getNumberFromIndex(yPoint)] )
+		if( not isSomethingBetweenPieceAndCoords( 0, yPoint, board ) and isOwnRookAt( 0, yPoint, board )):
+			possibleMoves.push_back( [tile.getLetterFromIndex(0), tile.getNumberFromIndex(yPoint)] )
+		if( not isSomethingBetweenPieceAndCoords( 7, yPoint, board ) and isOwnRookAt( 7, yPoint, board )):
+			possibleMoves.push_back( [tile.getLetterFromIndex(7), tile.getNumberFromIndex(yPoint)] )
 	return possibleMoves
 	
 
@@ -310,9 +379,63 @@ func isColor( color ):
 func isKing():
 	return pieceType == PieceConstantsPath.PieceType.King
 
+func isRook():
+	return pieceType == PieceConstantsPath.PieceType.Rook
+
+func isSomethingBetweenPieceAndCoords( xCoord, yCoord, board ):
+	var pieceLetterIndex = tile.getArrayIndexFromLetterColumn()
+	var pieceNumberIndex = tile.getArrayIndexFromNumberRow()
+	var xDiff = xCoord - pieceLetterIndex
+	var yDiff = yCoord - pieceNumberIndex
+	if abs( xDiff ) == 1 and abs( yDiff ) == 1:
+		return false
+	var xDirection = 1 if xDiff > 0 else -1
+	var yDirection = 1 if yDiff > 0 else -1
+	var startingX = pieceLetterIndex + xDirection
+	var startingY = pieceNumberIndex + yDirection
+	while startingX != xCoord and startingY != yCoord:
+		if board[startingX][startingY].hasPiece():
+			return true
+		startingX += xDirection
+		startingY += yDirection
+	return false
+
+func isOwnRookAt( xCoord, yCoord, board ):
+	var coordsTile = board[xCoord][yCoord]
+	if coordsTile.hasPiece() and coordsTile.getPiece().isRook() and coordsTile.getPiece().isColor( isWhite ):
+		return true
+	return false
+
 func SetMovedIfNotSetAlready():
 	if not hasPieceMoved:
 		hasPieceMoved = true
 
 func hasPieceMoved():
 	return hasPieceMoved
+
+func isTileOnBoardFree( newTileCoords, board ):
+	var letterIndex = tile.getArrayIndexFromLetterColumn( newTileCoords[0] )
+	var numberIndex = tile.getArrayIndexFromNumberRow( newTileCoords[1] )
+	if getTileOnBoardFromArrayIndexes(letterIndex, numberIndex, board).hasPiece():
+		return false
+	return true
+
+func isEnemyOnTile( tileCoords, board ):
+	var letterIndex = tile.getArrayIndexFromLetterColumn( tileCoords[0] )
+	var numberIndex = tile.getArrayIndexFromNumberRow( tileCoords[1] )
+	var tileOnBoard = getTileOnBoardFromArrayIndexes(letterIndex, numberIndex, board)
+	if (tileOnBoard.hasPiece() and not tileOnBoard.getPiece().isColor( isWhite )
+	and not tileOnBoard.getPiece().isKing()):
+		return true
+	return false
+
+func isOwnKingOnTile( tileCoords, board ):
+	var letterIndex = tile.getArrayIndexFromLetterColumn( tileCoords[0] )
+	var numberIndex = tile.getArrayIndexFromNumberRow( tileCoords[1] )
+	var tileOnBoard = getTileOnBoardFromArrayIndexes(letterIndex, numberIndex, board)
+	if tileOnBoard.hasPiece() and tileOnBoard.getPiece().isColor( isWhite ) and tileOnBoard.getPiece().isKing():
+		return true
+	return false
+
+func getTileOnBoardFromArrayIndexes(letterIndex, numberIndex, board):
+	return board[7 - numberIndex][letterIndex]

@@ -1,5 +1,7 @@
 extends Node2D
 
+class_name Game
+
 var isGameOn
 onready var gameBoard = get_node( "Back/Board" )
 
